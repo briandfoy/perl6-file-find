@@ -1,6 +1,6 @@
 use v6;
 
-unit module File::Find;
+unit module File::Find:auth<BDFOY>:ver<0.1.1>;
 
 sub checkrules ($elem, %opts) {
     if %opts<name>.defined {
