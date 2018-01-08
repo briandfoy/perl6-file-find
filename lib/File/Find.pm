@@ -2,7 +2,24 @@ use v6;
 
 unit module File::Find:auth<BDFOY>:ver<0.1.1>;
 
-sub checkrules ($elem, %opts) {
+sub check-type (
+	$elem,
+	$type where * eq any(<dir file symlink>)
+	) {
+	given $type {
+		when 'dir'     { return False unless $elem ~~ :d }
+		when 'file'    { return False unless $elem ~~ :f }
+		when 'symlink' { return False unless $elem ~~ :l }
+		default {
+			warn "type attribute has to be dir, file or symlink";
+			False;
+			}
+		}
+
+	return True;
+	}
+
+sub check-rules ($elem, %opts) {
 	if %opts<name>.defined {
 		if %opts<name> ~~ Str {
 			return False unless $elem.basename ~~ %opts<name>
@@ -13,15 +30,7 @@ sub checkrules ($elem, %opts) {
 		}
 
 	if %opts<type>.defined {
-		given %opts<type> {
-			when 'dir'     { return False unless $elem ~~ :d }
-			when 'file'    { return False unless $elem ~~ :f }
-			when 'symlink' { return False unless $elem ~~ :l }
-			default {
-				warn "type attribute has to be dir, file or symlink";
-				False;
-				}
-			}
+		check-type( $elem, %opts<type> ) or return False;
 		}
 
 	if %opts<code>.defined {
@@ -48,7 +57,7 @@ sub find (
 		# exclude is special because it also stops traversing inside,
 		# which checkrules does not
 		next if $elem ~~ $exclude;
-		take $elem if checkrules($elem, { :$name, :$type, :$exclude, :$code });
+		take $elem if check-rules($elem, { :$name, :$type, :$exclude, :$code });
 		if $recursive {
 			unless !$follow-symlinks and $elem.IO ~~ :l {
 				if $elem.IO ~~ :d {
