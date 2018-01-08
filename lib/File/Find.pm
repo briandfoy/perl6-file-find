@@ -87,38 +87,43 @@ File::Find - Get a lazy list of a directory tree
 
 	use File::Find;
 
-	my @list := find(dir => 'foo');
+	my @list := find( dir => 'foo' );
 	say @list[0..3];
 
-	my $list = find(dir => 'foo');
+	my $list = find( dir => 'foo' );
 	say $list[0..3];
 
 =head1 DESCRIPTION
 
-C<File::Find> allows you to get the contents of the given directory,
-recursively, depth first. The only exported function, C<find()>,
-generates a lazy list of files in given directory. Every element of
-the list is an C<IO::Path> object, described below. C<find()> takes
-one (or more) named arguments. The C<dir> argument is mandatory, and
-sets the directory C<find()> will traverse. There are also few
-optional arguments. If more than one is passed, all of them must match
-for a file to be returned.
+C<File::Find> searches a directory tree for files that matches various
+conditions that you choose. A file must match every condition that you
+specify.
 
-=head2 name
+When you assign to a positional you get an eager list; otherwise you
+get a lazy list.
 
-Specify a name of the file C<File::Find> is ought to look for. If you
-pass a string here, C<find()> will return only the files with the given
-name. When passing a regex, only the files with path matching the
-pattern will be returned. Any other type of argument passed here will
-just be smartmatched against the path (which is exactly what happens to
-regexes passed, by the way).
+=head2 (Str|Regex) name
 
-=head2 type
+Return files whose basename smart matches against this value.
 
-Given a type, C<find()> will only return files being the given type.
-The available types are C<file>, C<dir> or C<symlink>.
+Default: Any
 
-=head2 exclude
+=head2 (Str) type
+
+Only return entries of the named file type. The available types are
+C<file>, C<dir> or C<symlink>.
+
+Default: Empty
+
+=head2 (Callable) code
+
+Return files that make the code evaluate to C<True>. The code have
+zero or one parameters. With one parameter the argument is the IO
+object that represents the file.
+
+To Do: Recognize various exceptions to stop the whole process
+
+=head2 (Str|Bool|IO) exclude
 
 Exclude is meant to be used for skipping certain big and uninteresting
 directories, like '.git'. Neither them nor any of their contents will be
@@ -129,23 +134,44 @@ found by File::Find. It's recommended that it's passed as an IO object
 (or a Junction of those) so we avoid silly things like slashes
 vs backslashes on different platforms.
 
-=head2 keep-going
+=head2 (Num) max-depth
 
-Parameter C<keep-going> tells C<find()> to not stop finding files
-on errors such as 'Access is denied', but rather ignore the errors
-and keep going.
+Descend only this deep.
 
-=head2 follow-symlinks
+Default: Inf
 
-Paramenter C<follow-symlinks> tells C<find()> whether or not it should
-follow symlinks during recursive searches. This will still return
-symlinks in its results if the type parameter allows.
+=head2 (Bool) breadth-first
 
-=head1 Perl 5's File::Find
+Process new directories last. Files are treated as a LIFO.
 
-Please note, that this module is not trying to be the verbatim port of
-Perl 5's File::Find module. Its interface is closer to Perl 5's
-File::Find::Rule, and its features are planned to be similar one day.
+Default: True
+
+=head2 (Bool) depth-first
+
+Process new directories first. Files are treated as a FIFO.
+
+Default: False
+
+=head2 (Bool) recursive
+
+(Deprecated) This sets the C<max-depth> to zero if C<False>.
+
+Default: True
+
+=head2 (Bool) stop-on-error
+
+If there's an error reading a directory, stop immediately.
+
+Default: False
+
+=head2 (Bool) follow-symlinks
+
+Follow symlinks.
+
+Beware! This might put you in a part of the filesystem above where you
+started.
+
+Default: False
 
 =head1 CAVEATS
 
