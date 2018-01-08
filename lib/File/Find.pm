@@ -29,30 +29,49 @@ sub find (
 	:$type    where { $^a ~~ Any or $^a eq any( <dir file symlink> ) },
 	:$code    where { $^a ~~ any( Any, Code ) },
 	:$exclude where { $^a ~~ any( Any, Bool, IO ) } = False,
-	Bool :$recursive       = True,
-	Bool :$keep-going      = False,
-	Bool :$follow-symlinks = True
+	Num:D :$max-depth        = Inf,
+	Num:D :$max-items        = Inf,
+	Bool:D :$breadth-first   = True,
+	Bool:D :$depth-first     = False,
+	Bool:D :$recursive       = True,
+	Bool:D :$keep-going      = False,
+	Bool:D :$follow-symlinks = True
 	) is export {
+	my $depth = 0.Num;
+	my @targets;
+
+	# add-targets takes care exclusions and depths
+	# recursion is simply a max depth of zero
+	# I can't make $max-depth rw.
+	my $max-depth-rw = $recursive ?? $max-depth !! 0;
+	my $add-targets = -> $elem, $depth {
+		state $method = $breadth-first ?? 'append' !! 'unshift';
+
+		unless $depth > $max-depth-rw {
+			@targets."$method"(
+				dir($elem).grep( * !~~ $exclude ).map: { $( $_, $depth ) }
+				);
+			}
+		}
 
 	my $junction := make-checker( { :$name, :$type, :$code } );
 
-	my @targets = dir($dir).grep: * !~~ $exclude;
+	@targets = $add-targets.( $dir, $depth );
 
 	gather while @targets {
-		my $elem = @targets.shift;
+		my $dyad = @targets.shift;
 		# exclude is special because it also stops traversing inside,
 		# which checkrules does not
-		next if $elem ~~ $exclude;
-		take $elem if $elem ~~ $junction;
-		if $recursive {
-			unless !$follow-symlinks and $elem.IO ~~ :l {
-				if $elem.IO ~~ :d {
-					@targets.append: dir($elem);
-					CATCH { when X::IO::Dir {
-						$_.throw unless $keep-going;
-						next;
-					}}
-				}
+		next if $dyad.[0] ~~ $exclude;
+		take $dyad.[0] if $dyad.[0] ~~ $junction;
+
+		unless !$follow-symlinks and $dyad.[0].IO ~~ :l {
+			if $dyad.[0].IO ~~ :d {
+				$add-targets.( $dyad.[0], $dyad.[1] + 1 );
+				CATCH { when X::IO::Dir {
+					$_.throw unless $keep-going;
+					next;
+				}}
 			}
 		}
 	}
