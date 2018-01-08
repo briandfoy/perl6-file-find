@@ -7,6 +7,7 @@
     "depends"     : [],
     "provides"    : { "File::Find" : "lib/File/Find.pm" },
     "authors" : [
+    	"brian d foy",
         "Tadeusz “tadzik” Sośnierz",
         "Dagur Valberg Johansson",
         "Elizabeth Mattijsen",
@@ -21,8 +22,8 @@
         "Tobias Leich"
     ],
     "support" : {
-        "bugtracker" : "https://github.com/tadzik/File-Find/issues",
-        "source" : "git://github.com/tadzik/File-Find.git"
+        "bugtracker" : "https://github.com/briandfoy/perl6-file-find/issues",
+        "source" : "git://github.com/briandfoy/perl6-file-find.git"
     },
-    "source-url"  : "git://github.com/tadzik/File-Find.git"
+    "source-url"  : "git://github.com/briandfoy/perl6-file-find.git"
 }
