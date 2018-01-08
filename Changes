@@ -1,0 +1,14 @@
+# Changes for File::Find
+
+0.1.1 2018-01-08T04:17:00Z
+	* added many features, almost completely re-written
+	* choose between breadth or depth first
+	* specify code to evaluate a filename
+	* specify a max depth
+	* specify a max number of items
+	* stop if there's an X::FileFind::Stop exception
+
+
+0.1.0 2018-01-08T02:34:56Z
+	* forked from https://github.com/tadzik/File-Find
+	* applied outstanding PRs
