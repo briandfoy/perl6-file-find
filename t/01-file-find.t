@@ -3,7 +3,14 @@ use Test;
 use File::Find;
 plan 13;
 
-sub equals(\a, \b, $name) { ok ([&&] a >>~~<< b.map(*.IO)), $name }
+sub equals(\a, \b, $name) {
+	unless a.elems == b.elems {
+		diag "Expected {b.elems} elements but got {a.elems}";
+		flunk( $name );
+		return False;
+		}
+	ok ([&&] a >>~~<< b.map(*.IO)), $name
+	}
 
 {
 my $res = find(:dir<t/dir1>);
@@ -104,5 +111,6 @@ if 0 {
     LEAVE { &dir.unwrap($w); }
     }
 }
+
 
 exit 0; # I have no idea what I'm doing, but I get Non-zero exit status w/o this
