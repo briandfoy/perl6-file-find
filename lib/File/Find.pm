@@ -2,62 +2,48 @@ use v6;
 
 unit module File::Find:auth<BDFOY>:ver<0.1.1>;
 
-sub check-type (
-	$elem,
-	$type where * eq any(<dir file symlink>)
-	) {
-	given $type {
-		when 'dir'     { return False unless $elem ~~ :d }
-		when 'file'    { return False unless $elem ~~ :f }
-		when 'symlink' { return False unless $elem ~~ :l }
-		default {
-			warn "type attribute has to be dir, file or symlink";
-			False;
-			}
+sub make-checker ( %opts ) {
+	my @tests = (True);
+
+	@tests.unshift: do given %opts<name> {
+		when !.defined { Empty }
+		when Str       { -> $elem { $elem.basename eq %opts<name> } }
+		when Regex     { %opts<name> }
+		default        { Empty }
 		}
 
-	return True;
-	}
-
-sub check-rules ($elem, %opts) {
-	if %opts<name>.defined {
-		if %opts<name> ~~ Str {
-			return False unless $elem.basename ~~ %opts<name>
-			}
-		else {
-			return False unless $elem ~~ %opts<name>
-			}
+	@tests.unshift: do given %opts<type> {
+		when !.defined { Empty }
+		when 'dir'     { :d }
+		when 'file'    { :f }
+		when 'symlink' { :l }
+		default        { Empty }
 		}
 
-	if %opts<type>.defined {
-		check-type( $elem, %opts<type> ) or return False;
-		}
-
-	if %opts<code>.defined {
-		return False unless %opts<code>.( $elem );
-		}
-
-	return True;
+	all( @tests );
 	}
 
 sub find (
 	:$dir!,
 	:$name,
-	:$type where { $^a ~~ Any or $^a eq any( <dir file symlink> ) },
-	:$code where { $^a ~~ Any or $^a ~~ Code },
-	:$exclude = False,
+	:$type    where { $^a ~~ Any or $^a eq any( <dir file symlink> ) },
+	:$code    where { $^a ~~ any( Any, Code ) },
+	:$exclude where { $^a ~~ any( Any, Bool, IO ) } = False,
 	Bool :$recursive       = True,
 	Bool :$keep-going      = False,
 	Bool :$follow-symlinks = True
 	) is export {
 
-	my @targets = dir($dir);
+	my $junction := make-checker( { :$name, :$type, :$code } );
+
+	my @targets = dir($dir).grep: * !~~ $exclude;
+
 	gather while @targets {
 		my $elem = @targets.shift;
 		# exclude is special because it also stops traversing inside,
 		# which checkrules does not
 		next if $elem ~~ $exclude;
-		take $elem if check-rules($elem, { :$name, :$type, :$exclude, :$code });
+		take $elem if $elem ~~ $junction;
 		if $recursive {
 			unless !$follow-symlinks and $elem.IO ~~ :l {
 				if $elem.IO ~~ :d {
