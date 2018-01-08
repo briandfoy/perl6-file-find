@@ -155,5 +155,3 @@ spoiled. For a proper lazy list, use either binding (C<:=>) or assign
 a result to a scalar value (see SYNOPSIS).
 
 =end pod
-
-# vim: ft=perl6
