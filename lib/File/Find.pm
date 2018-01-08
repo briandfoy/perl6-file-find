@@ -3,54 +3,64 @@ use v6;
 unit module File::Find:auth<BDFOY>:ver<0.1.1>;
 
 sub checkrules ($elem, %opts) {
-    if %opts<name>.defined {
-        if %opts<name> ~~ Str {
-            return False unless $elem.basename ~~ %opts<name>
-        } else {
-            return False unless $elem ~~ %opts<name>
-        }
-    }
-    if %opts<type>.defined {
-        given %opts<type> {
-            when 'dir' {
-                return False unless $elem ~~ :d
-            }
-            when 'file' {
-                return False unless $elem ~~ :f
-            }
-            when 'symlink' {
-                return False unless $elem ~~ :l
-            }
-            default {
-                die "type attribute has to be dir, file or symlink";
-            }
-        }
-    }
-    return True
-}
+	if %opts<name>.defined {
+		if %opts<name> ~~ Str {
+			return False unless $elem.basename ~~ %opts<name>
+			}
+		else {
+			return False unless $elem ~~ %opts<name>
+			}
+		}
 
-sub find (:$dir!, :$name, :$type, :$exclude = False, Bool :$recursive = True,
-    Bool :$keep-going = False, :$follow-symlinks = True) is export {
+	if %opts<type>.defined {
+		given %opts<type> {
+			when 'dir'     { return False unless $elem ~~ :d }
+			when 'file'    { return False unless $elem ~~ :f }
+			when 'symlink' { return False unless $elem ~~ :l }
+			default {
+				warn "type attribute has to be dir, file or symlink";
+				False;
+				}
+			}
+		}
 
-    my @targets = dir($dir);
-    gather while @targets {
-        my $elem = @targets.shift;
-        # exclude is special because it also stops traversing inside,
-        # which checkrules does not
-        next if $elem ~~ $exclude;
-        take $elem if checkrules($elem, { :$name, :$type, :$exclude });
-        if $recursive {
-            unless !$follow-symlinks and $elem.IO ~~ :l {
-                if $elem.IO ~~ :d {
-                    @targets.append: dir($elem);
-                    CATCH { when X::IO::Dir {
-                        $_.throw unless $keep-going;
-                        next;
-                    }}
-                }
-            }
-        }
-    }
+	if %opts<code>.defined {
+		return False unless %opts<code>.( $elem );
+		}
+
+	return True;
+	}
+
+sub find (
+	:$dir!,
+	:$name,
+	:$type where { $^a ~~ Any or $^a eq any( <dir file symlink> ) },
+	:$code where { $^a ~~ Any or $^a ~~ Code },
+	:$exclude = False,
+	Bool :$recursive       = True,
+	Bool :$keep-going      = False,
+	Bool :$follow-symlinks = True
+	) is export {
+
+	my @targets = dir($dir);
+	gather while @targets {
+		my $elem = @targets.shift;
+		# exclude is special because it also stops traversing inside,
+		# which checkrules does not
+		next if $elem ~~ $exclude;
+		take $elem if checkrules($elem, { :$name, :$type, :$exclude, :$code });
+		if $recursive {
+			unless !$follow-symlinks and $elem.IO ~~ :l {
+				if $elem.IO ~~ :d {
+					@targets.append: dir($elem);
+					CATCH { when X::IO::Dir {
+						$_.throw unless $keep-going;
+						next;
+					}}
+				}
+			}
+		}
+	}
 }
 
 =begin pod
@@ -61,25 +71,24 @@ File::Find - Get a lazy list of a directory tree
 
 =head1 SYNOPSIS
 
-    use File::Find;
+	use File::Find;
 
-    my @list := find(dir => 'foo');
-    say @list[0..3];
+	my @list := find(dir => 'foo');
+	say @list[0..3];
 
-    my $list = find(dir => 'foo');
-    say $list[0..3];
+	my $list = find(dir => 'foo');
+	say $list[0..3];
 
 =head1 DESCRIPTION
 
 C<File::Find> allows you to get the contents of the given directory,
-recursively, depth first.
-The only exported function, C<find()>, generates a lazy
-list of files in given directory. Every element of the list is an
-C<IO::Path> object, described below.
-C<find()> takes one (or more) named arguments. The C<dir> argument
-is mandatory, and sets the directory C<find()> will traverse. 
-There are also few optional arguments. If more than one is passed,
-all of them must match for a file to be returned.
+recursively, depth first. The only exported function, C<find()>,
+generates a lazy list of files in given directory. Every element of
+the list is an C<IO::Path> object, described below. C<find()> takes
+one (or more) named arguments. The C<dir> argument is mandatory, and
+sets the directory C<find()> will traverse. There are also few
+optional arguments. If more than one is passed, all of them must match
+for a file to be returned.
 
 =head2 name
 
@@ -114,9 +123,9 @@ and keep going.
 
 =head2 follow-symlinks
 
-Paramenter C<follow-symlinks> tells C<find()> whether or not it should 
+Paramenter C<follow-symlinks> tells C<find()> whether or not it should
 follow symlinks during recursive searches. This will still return
-symlinks in its results, if the type parameter allows.
+symlinks in its results if the type parameter allows.
 
 =head1 Perl 5's File::Find
 
