@@ -35,7 +35,7 @@ sub find (
 	Bool:D :$depth-first     = False,
 	Bool:D :$recursive       = True,
 	Bool:D :$keep-going      = False,
-	Bool:D :$follow-symlinks = True
+	Bool:D :$follow-symlinks = False
 	) is export {
 	my $depth = 0.Num;
 	my @targets;
