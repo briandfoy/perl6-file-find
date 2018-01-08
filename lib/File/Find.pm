@@ -1,13 +1,14 @@
 use v6;
 
 use X::FileFind::Stop;
+
 unit module File::Find:auth<BDFOY>:ver<0.1.1>;
 
 subset IntInf where Int:D | Inf;
-	my @tests = (True);
-
 
 sub make-checker ( %opts --> Junction ) {
+	my @tests = (True);
+
 	@tests.unshift: do given %opts<name> {
 		when !.defined { Empty }
 		when Str       { -> $elem { $elem.basename eq %opts<name> } }
@@ -23,13 +24,13 @@ sub make-checker ( %opts --> Junction ) {
 		default        { Empty }
 		}
 
-	all( @tests );
-	}
-
 	@tests.unshift: do given %opts<code> {
 		when !.defined { Empty }
 		default        { %opts<code> }
 		}
+
+	all( @tests );
+	}
 
 sub find (
 	:$dir!,
