@@ -173,11 +173,26 @@ started.
 
 Default: False
 
-=head1 CAVEATS
+=head1 AUTHOR
 
-List assignment is eager in Perl 6, so if You assign C<find()> result
-to an array, the elements will be copied and the laziness will be
-spoiled. For a proper lazy list, use either binding (C<:=>) or assign
-a result to a scalar value (see SYNOPSIS).
+brian d foy, C<< <bdfoy@cpan.org> >>.
+
+I originally forked this module from U<https://github.com/tadzik/File-Find>
+but then I changed almost everything.
+
+=head1 SOURCE
+
+The repository for this source is in GitHub at
+L<https://github.com/briandfoy/perl6-file-find>
+
+=head1 COPYRIGHT
+
+Copyright © 2018, brian d foy C<< <bdfoy@cpan.org> >>
+
+=head1 LICENSE
+
+This module is available under the MIT License. A copy of
+this license should have come with this distribution in the LICENSE
+file.
 
 =end pod
