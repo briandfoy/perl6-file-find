@@ -38,7 +38,6 @@ sub find (
 	IntInf:D  :$max-depth    = Inf,
 	IntInf:D  :$max-items    = Inf,
 	Bool:D :$breadth-first   = True,
-	Bool:D :$depth-first     = False,
 	Bool:D :$recursive       = True,
 	Bool:D :$stop-on-error   = False,
 	Bool:D :$follow-symlinks = False
@@ -151,12 +150,6 @@ Default: Inf
 Process new directories last. Files are treated as a LIFO.
 
 Default: True
-
-=head2 (Bool) depth-first
-
-Process new directories first. Files are treated as a FIFO.
-
-Default: False
 
 =head2 (Bool) recursive
 
