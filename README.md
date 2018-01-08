@@ -1,82 +1,28 @@
-# NAME
+[![AppVeyor status](https://ci.appveyor.com/api/projects/status/wx190dt0yqiyixv1?svg=true)](https://ci.appveyor.com/project/briandfoy/perl6-file-find/settings) [![Travis status](https://travis-ci.org/briandfoy/perl6-file-find.svg?branch=master)](https://travis-ci.org/briandfoy/perl6-file-find) [![artistic2](https://img.shields.io/badge/license-MIT%20License-blue.svg?style=flat)](https://opensource.org/licenses/MIT)
 
-File::Find - Get a lazy list of a directory tree
+# The Perl 6 File::Find module from brian d foy
 
-## SYNOPSIS
+Traverse a directory tree and select files.
 
-    use File::Find;
+## Installation
 
-    # recursively (and eagerly) find all files from the 'foo' directory
-    my @list = find(dir => 'foo');
-    say @list[0..3];
+Checkout the [latest sources](https://github.com/briandfoy/perl6-file-find) then install from that directory:
 
-    # the same as above, but lazily return the results
-    my $list = find(dir => 'foo');
-    say $list[0..3];
+	zef install .
 
-    # eagerly find all Perl-related files from the current directory
-    my @perl-files = find(dir => '.', name => /.p [l||m] $/);
+There's already another `File::Find` and I'm not sure how `zef` handles authorities.
 
-    # lazily find all directories within the 'rakudo' directory
-    my $rakudo-dirs = find(dir => 'rakudo', type => 'dir');
+## Contributing
 
-    # lazily find all symlinks a normal user can access under `/etc`
-    my $etc-symlinks = find(dir => '/etc/', type => 'symlink', keep-going => True);
+Fork [perl6-file-find](https://github.com/briandfoy/perl6-file-find), edit, commit, and send a pull request!
 
-## DESCRIPTION
+If it's something non-trivial, you might consider [opening an issue](https://github.com/briandfoy/perl6-file-find/issues) first.
 
-`File::Find` allows you to get the contents of the given directory,
-recursively, depth first.
+# Author
 
-The only exported function, `find()`, generates a lazy
-list of files in given directory. Every element of the list is an
-`IO::Path` object, described below.
+brian d foy, based off a the [File::Find](https://github.com/tadzik/File-Find) module from
+[Tadeusz “tadzik” Sośnierz](https://github.com/tadzik).
 
-`find()` takes one (or more) named arguments. The `dir` argument
-is mandatory, and sets the directory `find()` will traverse.
+# License
 
-There are also a few optional arguments. If more than one is passed,
-all of them must match for a file to be returned.
-
-**name**
-
-Specify a name of the file `File::Find` is ought to look for. If you
-pass a string here, `find()` will return only the files with the given
-name. When passing a regex, only the files with path matching the
-pattern will be returned. Any other type of argument passed here will
-just be smartmatched against the path (which is exactly what happens to
-regexes passed, by the way).
-
-**exclude**
-
-Specify a regex (or any other smartmatchable type) to exclude files / directories from the search.
-
-**type**
-
-Given a type, `find()` will only return files being the given type.
-The available types are `file`, `dir` or `symlink`.
-
-**keep-going**
-
-Parameter `keep-going` tells `find()` to not stop finding files
-on errors such as 'Access is denied', but rather ignore the errors
-and keep going.
-
-**follow-symlinks**
-
-Paramenter `follow-symlinks` tells `find()` whether or not it should 
-follow symlinks during recursive searches. This will still return
-symlinks in its results, if the type parameter allows.
-
-**Perl 5's File::Find**
-
-Please note, that this module is not trying to be the verbatim port of
-Perl 5's File::Find module. Its interface is closer to Perl 5's
-File::Find::Rule, and its features are planned to be similar one day.
-
-## CAVEATS
-
-List assignment is eager in Perl 6, so if you assign `find()` result
-to an array, the elements will be copied and the laziness will be
-spoiled. For a proper lazy list, assign a result to a scalar value
-(see SYNOPSIS).
+[MIT License](https://opensource.org/licenses/MIT)
