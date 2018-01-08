@@ -101,7 +101,7 @@ File::Find - Get a lazy list of a directory tree
 
 =head1 DESCRIPTION
 
-C<File::Find> searches a directory tree for files that matches various
+C<File::Find::find()> searches a directory tree for files that matches various
 conditions that you choose. A file must match every condition that you
 specify.
 
@@ -127,7 +127,8 @@ Return files that make the code evaluate to C<True>. The code have
 zero or one parameters. With one parameter the argument is the IO
 object that represents the file.
 
-To Do: Recognize various exceptions to stop the whole process
+If the code fails with C<X::FileFind::Stop>, C<find> stops processing
+and will not return any more files.
 
 =head2 (Str|Bool|IO) exclude
 
@@ -148,7 +149,8 @@ Default: Inf
 
 =head2 (Bool) breadth-first
 
-Process new directories last. Files are treated as a LIFO.
+Process new directories last. Files are treated as a FIFO. When C<False>
+the search is depth first (LIFO).
 
 Default: True
 
