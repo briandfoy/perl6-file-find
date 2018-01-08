@@ -24,6 +24,11 @@ subset IntInf where Int:D | Inf;
 	all( @tests );
 	}
 
+	@tests.unshift: do given %opts<code> {
+		when !.defined { Empty }
+		default        { %opts<code> }
+		}
+
 sub find (
 	:$dir!,
 	:$name,
