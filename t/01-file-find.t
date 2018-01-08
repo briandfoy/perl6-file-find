@@ -1,7 +1,6 @@
 use v6;
 use Test;
 use File::Find;
-plan 13;
 
 sub equals(\a, \b, $name) {
 	unless a.elems == b.elems {
@@ -114,3 +113,4 @@ if 0 {
 
 
 exit 0; # I have no idea what I'm doing, but I get Non-zero exit status w/o this
+done-testing();
