@@ -87,17 +87,20 @@ sub find (
 
 =head1 NAME
 
-File::Find - Get a lazy list of a directory tree
+File::Find - Get a list of files in a directory tree
 
 =head1 SYNOPSIS
 
 	use File::Find;
 
-	my @list := find( dir => 'foo' );
+	my @list := find( dir => 'foo' );  # Lazy because of binding
 	say @list[0..3];
 
-	my $list = find( dir => 'foo' );
+	my $list = find( dir => 'foo' );   # Lazy because scalar
 	say $list[0..3];
+
+	my @list = find( dir => 'foo' );   # Eager
+	say @list[0..3];
 
 =head1 DESCRIPTION
 
