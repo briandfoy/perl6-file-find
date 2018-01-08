@@ -52,11 +52,16 @@ sub find (
 	my $max-depth-rw = $recursive ?? $max-depth !! 0;
 	my $add-targets = -> $elem, $depth {
 		state $method = $breadth-first ?? 'append' !! 'unshift';
-
 		unless $depth > $max-depth-rw {
-			@targets."$method"(
-				dir($elem).grep( * !~~ $exclude ).map: { $( $_, $depth ) }
-				);
+			try {
+				CATCH {
+					when $stop-on-error == True { $_.throw  }
+					default { warn "Caught {$_.^name}" }
+					}
+				@targets."$method"(
+					slip dir($elem).grep( * !~~ $exclude ).map: { $( $_, $depth ) }
+					);
+				}
 			}
 		}
 
