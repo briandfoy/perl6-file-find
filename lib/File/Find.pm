@@ -3,6 +3,7 @@ use v6;
 unit module File::Find:auth<BDFOY>:ver<0.1.1>;
 
 sub make-checker ( %opts ) {
+subset IntInf where Int:D | Inf;
 	my @tests = (True);
 
 	@tests.unshift: do given %opts<name> {
@@ -29,8 +30,8 @@ sub find (
 	:$type    where { $^a ~~ Any or $^a eq any( <dir file symlink> ) },
 	:$code    where { $^a ~~ any( Any, Code ) },
 	:$exclude where { $^a ~~ any( Any, Bool, IO ) } = False,
-	Num:D :$max-depth        = Inf,
-	Num:D :$max-items        = Inf,
+	IntInf:D  :$max-depth    = Inf,
+	IntInf:D  :$max-items    = Inf,
 	Bool:D :$breadth-first   = True,
 	Bool:D :$depth-first     = False,
 	Bool:D :$recursive       = True,
