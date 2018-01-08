@@ -83,34 +83,4 @@ my @test = $res.map({ .Str }).sort;
 equals @test, <t/dir2/file.foo t/dir2/symdir>, 'follow-symlinks is False';
 }
 
-{ #keep-going -----------------------------------------------------
-skip-rest('keep-going tests are brokenz');
-if 0 {
-    my $skip-first = True;
-    my $throw      = True;
-
-    # Wrap dir to throw when we want it to.
-    my $w = &dir.wrap({
-        if $skip-first { $skip-first = False; return callsame; }
-
-        if $throw {
-	    	$throw = False;
-            X::IO::Dir.new(path => "dummy", os-error => "dummy").throw
-        	}
-		callsame;
-    	});
-
-    dies-ok(sub { find(:dir<t/dir1>) },
-        "dies due to X::IO::Dir");
-
-    $throw = $skip-first = True;
-    my $res = find(:dir<t/dir1>, :name<file.bar>, keep-going => True);
-    is $res.elems, 1, 'found one of two files due to X::IO::Dir';
-
-    LEAVE { &dir.unwrap($w); }
-    }
-}
-
-
-exit 0; # I have no idea what I'm doing, but I get Non-zero exit status w/o this
 done-testing();
