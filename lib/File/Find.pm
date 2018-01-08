@@ -34,7 +34,7 @@ sub find (
 	Bool:D :$breadth-first   = True,
 	Bool:D :$depth-first     = False,
 	Bool:D :$recursive       = True,
-	Bool:D :$keep-going      = False,
+	Bool:D :$stop-on-error   = False,
 	Bool:D :$follow-symlinks = False
 	) is export {
 	my $depth = 0.Num;
@@ -69,7 +69,7 @@ sub find (
 			if $dyad.[0].IO ~~ :d {
 				$add-targets.( $dyad.[0], $dyad.[1] + 1 );
 				CATCH { when X::IO::Dir {
-					$_.throw unless $keep-going;
+					$_.throw if $stop-on-error;
 					next;
 				}}
 			}
