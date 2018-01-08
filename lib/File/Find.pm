@@ -78,7 +78,7 @@ sub find (
 
 		try {
 			CATCH {
-				#when X::FileFind::Stop      { last }
+				when X::FileFind::Stop      { last }
 				when $stop-on-error == True { last }
 				default                     { True }
 				}
