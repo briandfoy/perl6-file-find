@@ -44,6 +44,7 @@ sub find (
 	Bool:D :$follow-symlinks = False
 	--> Seq:D
 	) is export {
+	my $taken = 0;
 	my $depth = 0.Num;
 	my @targets;
 
