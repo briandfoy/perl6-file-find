@@ -2,10 +2,11 @@ use v6;
 
 unit module File::Find:auth<BDFOY>:ver<0.1.1>;
 
-sub make-checker ( %opts ) {
 subset IntInf where Int:D | Inf;
 	my @tests = (True);
 
+
+sub make-checker ( %opts --> Junction ) {
 	@tests.unshift: do given %opts<name> {
 		when !.defined { Empty }
 		when Str       { -> $elem { $elem.basename eq %opts<name> } }
