@@ -64,24 +64,23 @@ sub find (
 
 	@targets = $add-targets.( $dir, $depth );
 
-	gather while @targets {
+	gather while $taken < $max-items && @targets {
 		my $dyad = @targets.shift;
-		# exclude is special because it also stops traversing inside,
-		# which checkrules does not
-		next if $dyad.[0] ~~ $exclude;
-		take $dyad.[0] if $dyad.[0] ~~ $junction;
 
-		unless !$follow-symlinks and $dyad.[0].IO ~~ :l {
-			if $dyad.[0].IO ~~ :d {
-				$add-targets.( $dyad.[0], $dyad.[1] + 1 );
-				CATCH { when X::IO::Dir {
-					$_.throw if $stop-on-error;
-					next;
-				}}
+		try {
+			CATCH {
+				#when X::FileFind::Stop      { last }
+				when $stop-on-error == True { last }
+				default                     { True }
+				}
+			if $dyad.[0] ~~ $junction { $taken++; take $dyad.[0] };
+			}
+
+		unless !$follow-symlinks and $dyad.[0] ~~ :l {
+			$add-targets.( $dyad.[0], $dyad.[1] + 1 ) if $dyad.[0] ~~ :d;
 			}
 		}
 	}
-}
 
 =begin pod
 
