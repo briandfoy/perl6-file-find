@@ -70,16 +70,18 @@ my @test = $res.map({ .Str }).sort;
 equals @test, <t/dir1/file.bar t/dir1/file.foo t/dir1/foodir/not_a_dir>, 'exclude works';
 }
 
-{ #follow-symlinks -----------------------------------------------------
-my $res = find( :dir<t/dir2>, follow-symlinks => True );
-my @test = $res.map({ .Str }).sort;
-equals @test, <t/dir2/file.foo t/dir2/symdir t/dir2/symdir/empty_file t/dir2/symdir/file.bar>, 'follow-symlinks is True';
-}
+unless $*DISTRO.is-win {
+	{ #follow-symlinks -----------------------------------------------
+	my $res = find( :dir<t/dir2>, follow-symlinks => True );
+	my @test = $res.map({ .Str }).sort;
+	equals @test, <t/dir2/file.foo t/dir2/symdir t/dir2/symdir/empty_file t/dir2/symdir/file.bar>, 'follow-symlinks is True';
+	}
 
-{
-my $res = find( :dir<t/dir2>, follow-symlinks => False );
-my @test = $res.map({ .Str }).sort;
-equals @test, <t/dir2/file.foo t/dir2/symdir>, 'follow-symlinks is False';
+	{
+	my $res = find( :dir<t/dir2>, follow-symlinks => False );
+	my @test = $res.map({ .Str }).sort;
+	equals @test, <t/dir2/file.foo t/dir2/symdir>, 'follow-symlinks is False';
+	}
 }
 
 done-testing();
