@@ -63,7 +63,7 @@ equals @test, <t/dir1/file.foo t/dir1/foodir/not_a_dir>,
 	'types: file, combined with name';
 }
 
-{ #exclude -----------------------------------------------------
+{ #exclude -----------------------------------------------------------
 my $res = find(:dir<t/dir1>, :type<file>,
             :exclude('t/dir1/another_dir'.IO));
 my @test = $res.map({ .Str }).sort;
