@@ -25,4 +25,4 @@ brian d foy, based off a the [File::Find](https://github.com/tadzik/File-Find) m
 
 # License
 
-[MIT License](https://opensource.org/licenses/MIT)
+[Artistic License 2.0](https://opensource.org/licenses/Artistic-2.0)
