@@ -120,6 +120,7 @@ sub find (
 		:$stop-on-error,
 		:$exclude,
 		:$prune-element,
+		:$follow-symlinks,
 		);
 
 	my Junction $file-checker := create-file-checker( {
