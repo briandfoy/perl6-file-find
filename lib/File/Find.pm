@@ -41,9 +41,6 @@ my sub create-add-to-queue (
 	Junction :$prune-element,
 	--> Code
 	) {
-
-say "Follow symtlinks is $follow-symlinks";
-
 	# some things won't make it into the queue. they might
 	# have already been found but they won't be processed
 	# further
