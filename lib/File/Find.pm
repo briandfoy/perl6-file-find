@@ -32,11 +32,32 @@ sub make-checker ( %opts --> Junction ) {
 	all( @tests );
 	}
 
+my sub create-add-targets (
+	:$exclude where { $^a ~~ any( Any, Bool, IO ) } = False,
+	Bool:D :$breadth-first = True,
+	Bool:D :$stop-on-error = False,
+	) {
+	my $add-targets = -> $elem, $depth {
+		state $method = $breadth-first ?? 'append' !! 'unshift';
+
+		try {
+			CATCH {
+				when $stop-on-error == True { $_.throw  }
+				default { warn "Caught {$_.^name}" }
+				}
+			@targets."$method"(
+				slip dir($elem).grep( * !~~ $exclude ).map: { $( $_, $depth ) }
+				);
+			}
+		}
+	}
+
 sub find (
-	:$dir!,
+	:$dir = $*CWD,
 	:$name,
 	:$type    where { $^a ~~ Any or $^a eq any( <dir file symlink> ) },
 	:$code    where { $^a ~~ any( Any, Code ) },
+	:$prune   where { $^a ~~ any( Any, Code ) },
 	:$exclude where { $^a ~~ any( Any, Bool, IO ) } = False,
 	IntInf:D  :$max-depth    = Inf,
 	IntInf:D  :$max-items    = Inf,
@@ -50,28 +71,33 @@ sub find (
 	my $depth = 0.Num;
 	my @targets;
 
-	# add-targets takes care exclusions and depths
-	# recursion is simply a max depth of zero
-	# I can't make $max-depth rw.
+	# add-targets takes care of exclusions and depths
+	# recursion is simply a max depth that's non-zero
+	# I can't make $max-depth rw (why not?).
 	my $max-depth-rw = $recursive ?? $max-depth !! 0;
-	my $add-targets = -> $elem, $depth {
-		state $method = $breadth-first ?? 'append' !! 'unshift';
-		unless $depth > $max-depth-rw {
-			try {
-				CATCH {
-					when $stop-on-error == True { $_.throw  }
-					default { warn "Caught {$_.^name}" }
-					}
-				@targets."$method"(
-					slip dir($elem).grep( * !~~ $exclude ).map: { $( $_, $depth ) }
-					);
-				}
-			}
-		}
+
+	my $add-targets = create-add-targets( {
+		:$breadth-first,
+		:$stop-on-error,
+		:$exclude,
+		} );
 
 	my $junction := make-checker( { :$name, :$type, :$code } );
 
+	# stack a bunch of code bits that determine if we descend into
+	# the next element. If any of these return True then that element
+	# will be skipped.
+	my @skip-tests;
+	@skip-tests.unshift( -> $elem, $depth { $depth > $max-depth-rw } )
+		 if $max-depth ~~ Int;
+	@skip-tests.unshift( -> $elem, $depth { $prune.( $elem, $depth ) } )
+		 if $prune;
+	@skip-tests.unshift( -> $a, $b { False } )
+		unless @skip-tests.elems > 0; # default test (always false, so no skipping)
+	my $skip-element = any( @skip-tests );
+
 	@targets = $add-targets.( $dir, $depth );
+
 
 	gather while $taken < $max-items && @targets {
 		my $dyad = @targets.shift;
@@ -84,6 +110,9 @@ sub find (
 				}
 			if $dyad.[0] ~~ $junction { $taken++; take $dyad.[0] };
 			}
+
+
+		if $skip-element.( $elem, $depth ).so;
 
 		unless !$follow-symlinks and $dyad.[0] ~~ :l {
 			$add-targets.( $dyad.[0], $dyad.[1] + 1 ) if $dyad.[0] ~~ :d;
@@ -118,6 +147,12 @@ specify.
 
 When you assign to a positional you get an eager list; otherwise you
 get a lazy list.
+
+=head2 (Str|IO::Path) dir
+
+Return files whose basename smart matches against this value.
+
+Default: $*CWD (the current working directory)
 
 =head2 (Str|Regex) name
 
@@ -204,7 +239,7 @@ Copyright © 2018, brian d foy C<< <bdfoy@cpan.org> >>
 
 =head1 LICENSE
 
-This module is available under the MIT License. A copy of
+This module is available under the Artistic 2 License. A copy of
 this license should have come with this distribution in the LICENSE
 file.
 
