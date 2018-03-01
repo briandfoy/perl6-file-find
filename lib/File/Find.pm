@@ -93,6 +93,7 @@ sub find (
 	:$code    where { $^a ~~ any( Any, Code ) },
 	:$prune   where { $^a ~~ any( Any, Code ) },
 	:$exclude where { $^a ~~ any( Any, Bool, IO ) } = False,
+	:$channel where { $^a.^can( 'send' ).[0].arity == 2 }, # this can be more flexible
 	IntInf:D  :$max-depth is copy = Inf,
 	IntInf:D  :$max-items    = Inf,
 	Bool:D :$breadth-first   = True,
@@ -134,7 +135,7 @@ sub find (
 	gather loop {
 		state $taken = 0;
 		last unless @queue.elems;
-		my $dyad = @queue.shift;
+		my ( $file, $depth ) = |( @queue.shift );
 
 		try {
 			CATCH {
@@ -142,12 +143,16 @@ sub find (
 				when $stop-on-error == True { last }
 				default                     { True }
 				}
-			if $dyad.[0] ~~ $file-checker { $taken++; take $dyad.[0] };
+			if $file ~~ $file-checker {
+				$taken++;
+				take $file;
+				$channel.send( $file ) if $channel;
+				};
 			}
 
 		last if $taken >= $max-items;
 		# all the decisions are in this code. It might not be added.
-		$add-to-queue.( $dyad.[0], $dyad.[1] + 1 );
+		$add-to-queue.( $file, $depth + 1 );
 		}
 	}
 
