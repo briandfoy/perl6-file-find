@@ -1,4 +1,4 @@
-[![AppVeyor status](https://ci.appveyor.com/api/projects/status/wx190dt0yqiyixv1?svg=true)](https://ci.appveyor.com/project/briandfoy/perl6-file-find/settings) [![Travis status](https://travis-ci.org/briandfoy/perl6-file-find.svg?branch=master)](https://travis-ci.org/briandfoy/perl6-file-find) [![artistic2](https://img.shields.io/badge/license-MIT%20License-blue.svg?style=flat)](https://opensource.org/licenses/MIT)
+[![AppVeyor status](https://ci.appveyor.com/api/projects/status/wx190dt0yqiyixv1?svg=true)](https://ci.appveyor.com/project/briandfoy/perl6-file-find/settings) [![Travis status](https://travis-ci.org/briandfoy/perl6-file-find.svg?branch=master)](https://travis-ci.org/briandfoy/perl6-file-find) [![artistic2](https://img.shields.io/badge/license-Artistic%20License%202.0-blue.svg?style=flat)](https://opensource.org/licenses/MIT)
 
 # The Perl 6 File::Find module from brian d foy
 
