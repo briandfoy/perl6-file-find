@@ -6,7 +6,7 @@ unit module File::Find:auth<BDFOY>:ver<0.1.1>;
 
 subset IntInf where Int:D | Inf;
 
-sub make-checker ( %opts --> Junction ) {
+my sub create-file-checker ( %opts --> Junction ) {
 	my @tests = (True);
 
 	@tests.unshift: do given %opts<name> {
@@ -32,24 +32,61 @@ sub make-checker ( %opts --> Junction ) {
 	all( @tests );
 	}
 
-my sub create-add-targets (
+my sub create-add-to-queue (
+	@queue, # container, so already rw
 	:$exclude where { $^a ~~ any( Any, Bool, IO ) } = False,
-	Bool:D :$breadth-first = True,
-	Bool:D :$stop-on-error = False,
+	Bool:D :$breadth-first   = True,
+	Bool:D :$stop-on-error   = False,
+	Bool:D :$follow-symlinks = False,
+	Junction :$prune-element,
+	--> Code
 	) {
-	my $add-targets = -> $elem, $depth {
+
+say "Follow symtlinks is $follow-symlinks";
+
+	# some things won't make it into the queue. they might
+	# have already been found but they won't be processed
+	# further
+	my @skip-tests = -> $elem, Int $depth { $elem.IO !~~ :d };
+	@skip-tests.push( -> $elem, Int $depth { $elem.IO ~~ :l } ) unless $follow-symlinks;
+	@skip-tests.push( -> $elem, Int $depth { $prune-element.( $elem, $depth ) } ) if $prune-element;
+	my Junction $skip-this-element = any( @skip-tests );
+
+	my $add-to-queue = sub ($elem, Int $depth --> Bool) {
 		state $method = $breadth-first ?? 'append' !! 'unshift';
+
+		return False if $skip-this-element.( $elem, $depth ).so;
 
 		try {
 			CATCH {
 				when $stop-on-error == True { $_.throw  }
-				default { warn "Caught {$_.^name}" }
+				default { warn "Caught {$_.^name} for $elem" }
 				}
-			@targets."$method"(
+			@queue."$method"(
 				slip dir($elem).grep( * !~~ $exclude ).map: { $( $_, $depth ) }
 				);
+			return True;
 			}
 		}
+	}
+
+my sub create-prune-tests (
+	IntInf:D  :$max-depth    = Inf,
+	IntInf:D  :$max-items    = Inf,
+	:$prune   where { $^a ~~ any( Any, Code ) },
+	--> Junction
+	) {
+	# stack a bunch of code bits that determine if we descend into
+	# the next element. If any of these return True then that element
+	# will be skipped.
+	my @prune-tests;
+	@prune-tests.unshift( -> $elem, $depth { $depth > $max-depth } )
+		 if $max-depth ~~ Int;
+	@prune-tests.unshift( -> $elem, $depth { $prune.( $elem, $depth ) } )
+		 if $prune;
+	@prune-tests.unshift( -> $a, $b { False } )
+		unless @prune-tests.elems > 0; # default test (always false, so no skipping)
+	my $prune-element = any( @prune-tests );
 	}
 
 sub find (
@@ -59,7 +96,7 @@ sub find (
 	:$code    where { $^a ~~ any( Any, Code ) },
 	:$prune   where { $^a ~~ any( Any, Code ) },
 	:$exclude where { $^a ~~ any( Any, Bool, IO ) } = False,
-	IntInf:D  :$max-depth    = Inf,
+	IntInf:D  :$max-depth is copy = Inf,
 	IntInf:D  :$max-items    = Inf,
 	Bool:D :$breadth-first   = True,
 	Bool:D :$recursive       = True,
@@ -68,39 +105,39 @@ sub find (
 	--> Seq:D
 	) is export {
 	my $taken = 0;
-	my $depth = 0.Num;
-	my @targets;
+	my $depth = 0;
+	my @queue;
 
-	# add-targets takes care of exclusions and depths
-	# recursion is simply a max depth that's non-zero
-	# I can't make $max-depth rw (why not?).
-	my $max-depth-rw = $recursive ?? $max-depth !! 0;
 
-	my $add-targets = create-add-targets( {
+	$max-depth = 0 unless $recursive;
+
+	my Junction $prune-element := create-prune-tests(
+		:max-depth( $max-depth ),
+		:$max-items,
+		:$prune,
+		);
+
+	my Code $add-to-queue := create-add-to-queue(
+		@queue,
 		:$breadth-first,
 		:$stop-on-error,
 		:$exclude,
+		:$prune-element,
+		);
+
+	my Junction $file-checker := create-file-checker( {
+		:$name,
+		:$type,
+		:$code
 		} );
 
-	my $junction := make-checker( { :$name, :$type, :$code } );
+	# prime the queue with the first directory
+	$add-to-queue.( $dir, $depth );
 
-	# stack a bunch of code bits that determine if we descend into
-	# the next element. If any of these return True then that element
-	# will be skipped.
-	my @skip-tests;
-	@skip-tests.unshift( -> $elem, $depth { $depth > $max-depth-rw } )
-		 if $max-depth ~~ Int;
-	@skip-tests.unshift( -> $elem, $depth { $prune.( $elem, $depth ) } )
-		 if $prune;
-	@skip-tests.unshift( -> $a, $b { False } )
-		unless @skip-tests.elems > 0; # default test (always false, so no skipping)
-	my $skip-element = any( @skip-tests );
-
-	@targets = $add-targets.( $dir, $depth );
-
-
-	gather while $taken < $max-items && @targets {
-		my $dyad = @targets.shift;
+	gather loop {
+		state $taken = 0;
+		last unless @queue.elems;
+		my $dyad = @queue.shift;
 
 		try {
 			CATCH {
@@ -108,15 +145,12 @@ sub find (
 				when $stop-on-error == True { last }
 				default                     { True }
 				}
-			if $dyad.[0] ~~ $junction { $taken++; take $dyad.[0] };
+			if $dyad.[0] ~~ $file-checker { $taken++; take $dyad.[0] };
 			}
 
-
-		if $skip-element.( $elem, $depth ).so;
-
-		unless !$follow-symlinks and $dyad.[0] ~~ :l {
-			$add-targets.( $dyad.[0], $dyad.[1] + 1 ) if $dyad.[0] ~~ :d;
-			}
+		last if $taken >= $max-items;
+		# all the decisions are in this code. It might not be added.
+		$add-to-queue.( $dyad.[0], $dyad.[1] + 1 );
 		}
 	}
 
@@ -167,7 +201,7 @@ C<file>, C<dir> or C<symlink>.
 
 Default: Empty
 
-=head2 (Callable) code
+=head2 (Callable --> Bool) code
 
 Return files that make the code evaluate to C<True>. The code have
 zero or one parameters. With one parameter the argument is the IO
@@ -199,6 +233,39 @@ Process new directories last. Files are treated as a FIFO. When C<False>
 the search is depth first (LIFO).
 
 Default: True
+
+=head2 (Callable --> Bool) prune
+
+Use C<prune> when you don't want to descend into a directory. It still
+finds the directory but doesn't go deeper along that path.
+
+This code is called for each encountered file. When the code returns
+True, no more files under that path are added to the queue. The code
+takes two positional arguments: the filename and the current depth:
+
+	-> $filename, $depth { ... }
+
+Prune directories by their names. These still find these directories
+but they don't go past them:
+
+	my @prune-dirs = <.git .precomp>;
+	find(
+		prune => -> $filename, $d {
+			$filename.IO.basename eq any( @prune-dirs )
+			},
+		);
+
+Here's how I find all my git repos. Prune all the F<.git> dirs but look
+for that name. It's finds the F<.git> but the prune prevents further processing:
+
+	my @prune-dirs = <.git>;
+	my @git-paths = find(
+		dir  => '/Users/brian/Dev',
+		name => '.git',
+		prune => -> $filename, $d {
+			$filename.IO.basename eq any( @prune-dirs )
+			},
+		);
 
 =head2 (Bool) recursive
 
