@@ -25,19 +25,6 @@ my @test = $res.map({ .Str }).sort;
 equals @test, <t/dir1/file.foo t/dir1/foodir t/dir1/foodir/not_a_dir>, 'name with regex';
 }
 
-
-{ # (default) recursive find -----------------------------------------
-my $res = find(:dir<t/dir1>, :name<file.bar>);
-is $res.elems, 2, 'two files with name and string';
-}
-
-
-
-{ # with forced find to Not work recursive ---------------------------
-my $res = find(:dir<t/dir1>, :name<file.bar>, recursive => False);
-is $res.elems, 1, 'name with a string';
-}
-
 {
 my $res = find(:dir<t/dir1>, :name<notexisting>);
 is $res.elems, 0, 'no results';
