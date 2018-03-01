@@ -1,7 +1,7 @@
 use v6;
 need X::FileFind::Stop;
 
-unit module File::Find:auth<BDFOY>:ver<0.2.1>;
+unit module File::Find:auth<BDFOY>:ver<0.2.2>;
 
 subset IntInf where Int:D | Inf;
 
