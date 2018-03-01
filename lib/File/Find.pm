@@ -93,6 +93,8 @@ sub find (
 	:$prune   where { $^a ~~ any( Any, Code ) },
 	:$exclude where { $^a ~~ any( Any, Bool, IO ) } = False,
 	:$channel where { $^a ~~ Any or $^a.^can( 'send' ).[0].arity == 2 }, # this can be more flexible
+	Code :$on-finish = -> {},
+	Code :$on-start  = -> {},
 	IntInf:D  :$max-depth is copy = Inf,
 	IntInf:D  :$max-items    = Inf,
 	Bool:D :$breadth-first   = True,
@@ -101,6 +103,8 @@ sub find (
 	Bool:D :$follow-symlinks = False
 	--> Seq:D
 	) is export {
+	ENTER $on-start.();
+
 	my $taken = 0;
 	my $depth = 0;
 	my @queue;
@@ -129,18 +133,21 @@ sub find (
 		:$code
 		} );
 
+
 	# prime the queue with the first directory
 	$add-to-queue.( $dir, $depth );
 
+	# There's on-finish all over the place because the block exits
+	# very quickly since it returns a lazy list.
 	gather loop {
 		state $taken = 0;
-		last unless @queue.elems;
+		unless @queue.elems { $on-finish.(); last };
 		my ( $file, $depth ) = |( @queue.shift );
 
 		try {
 			CATCH {
-				when X::FileFind::Stop      { last }
-				when $stop-on-error == True { last }
+				when X::FileFind::Stop      { $on-finish.(); last }
+				when $stop-on-error == True { $on-finish.(); last }
 				default                     { True }
 				}
 			if $file ~~ $file-checker {
@@ -154,6 +161,8 @@ sub find (
 		# all the decisions are in this code. It might not be added.
 		$add-to-queue.( $file, $depth + 1 );
 		}
+
+
 	}
 
 =begin pod
@@ -183,6 +192,14 @@ specify.
 
 When you assign to a positional you get an eager list; otherwise you
 get a lazy list.
+
+=head2 (Code) on-start
+
+If specified run this code before you start traversing files.
+
+=head2 (Code) on-finish
+
+If specified run this code after you finish traversing files.
 
 =head2 (Str|IO::Path) dir
 
