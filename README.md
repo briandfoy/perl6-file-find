@@ -21,7 +21,7 @@ If it's something non-trivial, you might consider [opening an issue](https://git
 # Author
 
 brian d foy, based off a the [File::Find](https://github.com/tadzik/File-Find) module from
-[Tadeusz “tadzik” Sośnierz](https://github.com/tadzik).
+[Tadeusz “tadzik” Sośnierz](https://github.com/tadzik), but then completely gutted and redone.
 
 # License
 
