@@ -1,5 +1,4 @@
 use v6;
-
 need X::FileFind::Stop;
 
 unit module File::Find:auth<BDFOY>:ver<0.1.1>;
@@ -93,7 +92,7 @@ sub find (
 	:$code    where { $^a ~~ any( Any, Code ) },
 	:$prune   where { $^a ~~ any( Any, Code ) },
 	:$exclude where { $^a ~~ any( Any, Bool, IO ) } = False,
-	:$channel where { $^a.^can( 'send' ).[0].arity == 2 }, # this can be more flexible
+	:$channel where { $^a ~~ Any or $^a.^can( 'send' ).[0].arity == 2 }, # this can be more flexible
 	IntInf:D  :$max-depth is copy = Inf,
 	IntInf:D  :$max-items    = Inf,
 	Bool:D :$breadth-first   = True,
