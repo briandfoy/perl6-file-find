@@ -8,18 +8,6 @@
     "provides"    : { "File::Find" : "lib/File/Find.pm" },
     "authors" : [
     	"brian d foy",
-        "Tadeusz “tadzik” Sośnierz",
-        "Dagur Valberg Johansson",
-        "Elizabeth Mattijsen",
-        "Filip Sergot",
-        "GlitchMr",
-        "Heather",
-        "isleofmax",
-        "Moritz Lenz",
-        "Paul Cochrane",
-        "Steve Mynott",
-        "timo",
-        "Tobias Leich"
     ],
     "support" : {
         "bugtracker" : "https://github.com/briandfoy/perl6-file-find/issues",
